@@ -7,35 +7,62 @@
   }
 
   dataGrouper.prototype = {
-    averageLE: function(file){
-      var data = JSON.parse(require(file));
+    ageAndCentury: function(data){
+      data.forEach(function(obj){
+        var store = {},
+            age = obj.died - obj.born,
+            key = Math.ceil(obj.died/100) + "th Century";
 
-        data.forEach(function(obj){
-          var store = {},
-              age = obj.died - obj.born,
-              key = Math.ceil(obj.died/100) + "th Century";
-
-          store[key] = age;
-          current.result.push(store);
-        });
-
-      return this.filterBy(current.result);
+        store[key] = age;
+        current.result.push(store);
+      });
+      return this.result;
     },
 
-    filterBy: function(arrayOfDates){
-      var ans = {};
+    averageLE: function(file){
+      var data = JSON.parse(require(file)),
+          result = [];
+
+      data = this.ageAndCentury(data);
+      var groupedObj = this.groupBy(current.result);
+      result = this.averageValues(groupedObj);
+
+      return this.keySort(result);
+    },
+
+    averageValues: function(groupedObj){
+      for(var obj2 in groupedObj){
+        groupedObj[obj2] = groupedObj[obj2].reduce(function(a,b){
+                            return a + b;
+                           })/groupedObj[obj2].length;
+      }
+      return groupedObj;
+    },
+
+    groupBy: function(arrayOfDates){
+      var groupedObj = {};
 
       for(var i = 0; i < arrayOfDates.length; i++){
         for(var obj in arrayOfDates[i]){
-         ans[obj] = ans[obj] ? ans[obj].concat(arrayOfDates[i][obj]) : [].concat(arrayOfDates[i][obj]);
+         groupedObj[obj] = groupedObj[obj] ?
+                           groupedObj[obj].concat(arrayOfDates[i][obj]) :
+                           [].concat(arrayOfDates[i][obj]);
         }
       }
 
-      for(var obj2 in ans){
-        ans[obj2] = ans[obj2].reduce(function(a,b){ return a + b; })/ans[obj2].length;
-      }
+      return groupedObj;
+    },
 
-      return ans;
+    keySort: function(array){
+      var sorted = Object.keys(array).sort(),
+          result = [];
+
+      sorted.forEach(function(v){
+        var object = {};
+        object[v] = +(array[v].toFixed(1));
+        result.push(object);
+      });
+      return result;
     }
   };
 
